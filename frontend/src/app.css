@@ -1,3 +1,8 @@
+#app {
+    height: 100vh;
+    text-align: center;
+}
+
 #logo {
     display: block;
     width: 50%;
@@ -17,7 +22,7 @@
 }
 
 .input-box .btn {
-    width: 60px;
+    width: 120px;
     height: 30px;
     line-height: 30px;
     border-radius: 3px;
@@ -37,6 +42,7 @@
     border-radius: 3px;
     outline: none;
     height: 30px;
+    width: 300px;
     line-height: 30px;
     padding: 0 10px;
     background-color: rgba(240, 240, 240, 1);
@@ -51,4 +57,16 @@
 .input-box .input:focus {
     border: none;
     background-color: rgba(255, 255, 255, 1);
+}
+
+.selectDirField > * {
+    height: 30px;
+    margin-right: 20px;
+    margin-bottom: 5px;
+}
+.selectDirField > *:last-child {
+    margin-right: 0px;
+}
+.selectDirField > .btn {
+    width: 110px;
 }
