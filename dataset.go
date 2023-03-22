@@ -22,6 +22,11 @@ var dir_first string
 var dir_second string
 var dir_merged string
 
+////////////////////////////////////////////////////////////////////////////////////
+/* 			Image helpers 														  */
+////////////////////////////////////////////////////////////////////////////////////
+
+// Gets minimum image dimension (img1, img2). Used for new image creation
 func getMinBounds(bounds1 image.Rectangle, bounds2 image.Rectangle) image.Rectangle {
 	var rect image.Rectangle
 	if bounds1.Min.X < bounds2.Min.X {
@@ -47,6 +52,7 @@ func getMinBounds(bounds1 image.Rectangle, bounds2 image.Rectangle) image.Rectan
 	return rect
 }
 
+// Limits pixel's color value by specified value to prevent overflow
 func clamp(value, min, max uint32) uint32 {
 	if value < min {
 		return min
@@ -57,6 +63,7 @@ func clamp(value, min, max uint32) uint32 {
 	}
 }
 
+// Returns pixel3 (RGBA) = pixel1 (RGBA) + pixel2 (RGBA)
 func plusColors(c1 color.Color, c2 color.Color) color.Color {
 	r1, g1, b1, a1 := c1.RGBA()
 	r2, g2, b2, a2 := c2.RGBA()
@@ -68,20 +75,11 @@ func plusColors(c1 color.Color, c2 color.Color) color.Color {
 	return color.Color(rgba)
 }
 
-func merge(img1 image.Image, img2 image.Image) (image.Image, error) {
-	bounds := getMinBounds(img1.Bounds(), img2.Bounds())
-	img := image.NewRGBA(image.Rect(bounds.Min.X, bounds.Min.Y, bounds.Max.X, bounds.Max.Y))
-	if img != nil {
-		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-			for x := bounds.Min.X; x < bounds.Max.X; x++ {
-				img.Set(x, y, plusColors(img1.At(x, y), img2.At(x, y)))
-			}
-		}
-		return img, nil
-	}
-	return nil, errors.New("image.NewRGMA: alloc failed")
-}
+////////////////////////////////////////////////////////////////////////////////////
+/* 				File helpers 													  */
+////////////////////////////////////////////////////////////////////////////////////
 
+// Opens file and return image from it
 func openImage(path string) (image.Image, error) {
 	var img image.Image
 	file, err := os.Open(path)
@@ -105,11 +103,31 @@ func openImage(path string) (image.Image, error) {
 	return img, nil
 }
 
-func process(f1 os.FileInfo, f2 os.FileInfo) {
+////////////////////////////////////////////////////////////////////////////////////
+/* 				Operations 														  */
+////////////////////////////////////////////////////////////////////////////////////
+
+// Returns img3 = img1 + img2
+func mergeImage(img1 image.Image, img2 image.Image) (image.Image, error) {
+	bounds := getMinBounds(img1.Bounds(), img2.Bounds())
+	img := image.NewRGBA(image.Rect(bounds.Min.X, bounds.Min.Y, bounds.Max.X, bounds.Max.Y))
+	if img != nil {
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+			for x := bounds.Min.X; x < bounds.Max.X; x++ {
+				img.Set(x, y, plusColors(img1.At(x, y), img2.At(x, y)))
+			}
+		}
+		return img, nil
+	}
+	return nil, errors.New("image.NewRGMA: alloc failed")
+}
+
+// Creates new img file and fills it with img3 = img1 + img
+func mergeFile(f1 os.FileInfo, f2 os.FileInfo) {
 	img1, err1 := openImage(dir_first + f1.Name())
 	img2, err2 := openImage(dir_second + f2.Name())
 	if err1 == nil && err2 == nil {
-		img_res, err := merge(img1, img2)
+		img_res, err := mergeImage(img1, img2)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -137,7 +155,25 @@ func process(f1 os.FileInfo, f2 os.FileInfo) {
 	}
 }
 
-func cut(f os.FileInfo, boundsReq image.Rectangle) {
+// Returns cropped image from img with coords: [xx, xx+boundsReq.Max.X], [yy, yy+boundsReq.Max.X]
+func cutImage(img *image.Image, xx int, yy int, boundsReq image.Rectangle) image.Image {
+	boundsImg := (*img).Bounds()
+	imgCrop := image.NewRGBA(image.Rect(boundsReq.Min.X, boundsReq.Min.Y, boundsReq.Max.X, boundsReq.Max.Y))
+	for y := boundsImg.Min.Y; y < boundsReq.Max.Y; y++ {
+		for x := boundsImg.Min.X; x < boundsReq.Max.X; x++ {
+			if x+xx > boundsImg.Max.X || y+yy > boundsImg.Max.Y {
+				return nil
+			}
+			imgCrop.Set(x, y, (*img).At(x+xx, y+yy))
+		}
+	}
+	return imgCrop
+}
+
+// Create n cropped files from given file and given image dimension.
+// Example: if original file has 1024*1024 resolution and 256*256 dimension given,
+// then 4 files with 256*256 resolution will be created.
+func cutFile(f os.FileInfo, boundsReq image.Rectangle) {
 	img, err := openImage(dir_first + f.Name())
 	if err != nil {
 		fmt.Println(err)
@@ -148,28 +184,24 @@ func cut(f os.FileInfo, boundsReq image.Rectangle) {
 		return
 	}
 	bounds := img.Bounds()
-	imgCroppped := image.NewRGBA(image.Rect(boundsReq.Min.X, boundsReq.Min.Y, boundsReq.Max.X, boundsReq.Max.Y))
+
 	yy := bounds.Min.Y
 	xx := bounds.Min.X
 	cycle := 1
 
 	for {
-		for y := bounds.Min.Y; y < boundsReq.Max.Y; y++ {
-			for x := bounds.Min.X; x < boundsReq.Max.X; x++ {
-				if x+xx > bounds.Max.X || y+yy > bounds.Max.Y {
-					return
-				}
-				imgCroppped.Set(x, y, img.At(x+xx, y+yy))
-			}
+		imgCrop := cutImage(&img, xx, yy, boundsReq)
+		// Reach the end of file
+		if imgCrop == nil {
+			return
 		}
-
 		ext := filepath.Ext(strings.ToLower(f.Name()))
 		f, err := os.Create(dir_merged + f.Name()[:len(f.Name())-len(ext)] + "_" + strconv.Itoa(cycle) + filepath.Ext(f.Name()))
 		if err == nil {
 			if filepath.Ext(strings.ToLower(f.Name())) == ".jpeg" || filepath.Ext(strings.ToLower(f.Name())) == ".jpg" {
-				jpeg.Encode(f, imgCroppped, nil)
+				jpeg.Encode(f, imgCrop, nil)
 			} else if filepath.Ext(strings.ToLower(f.Name())) == ".png" {
-				png.Encode(f, imgCroppped)
+				png.Encode(f, imgCrop)
 			} else {
 				fmt.Println("wrong type")
 			}
@@ -185,7 +217,54 @@ func cut(f os.FileInfo, boundsReq image.Rectangle) {
 		}
 		cycle++
 	}
+}
 
+////////////////////////////////////////////////////////////////////////////////////
+/*				Processes, which should be called by frontend					  */
+////////////////////////////////////////////////////////////////////////////////////
+
+// Creates Dir3 and fills it with images = (All images from dir1) + (All images from dir2).
+// If count(dir2 images) < count(dir1 images), then merge algorithm proccess cyclically,
+// repeating merge dir2 images to remaining dir1 images.
+func ProcessMerge(dir_first string, dir_second string, dir_result string) {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	start := time.Now()
+	f_list1, err := ioutil.ReadDir(dir_first)
+	if err != nil {
+		panic(err)
+	}
+
+	f_list2, err := ioutil.ReadDir(dir_second)
+	if err != nil {
+		panic(err)
+	}
+
+	stack := make([]int, len(f_list1))
+	for i := 0; i < len(f_list1); i++ {
+		stack[i] = i
+	}
+	work := make(chan int)
+	wg := sync.WaitGroup{}
+	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range work {
+				if i < len(f_list1) {
+					mergeFile(f_list1[i], f_list2[i%len(f_list2)])
+				}
+			}
+		}()
+	}
+	go func() {
+		for _, s := range stack {
+			work <- s
+		}
+		close(work)
+	}()
+	wg.Wait()
+	elapsed := time.Since(start)
+	fmt.Printf("Time spent: %s\n", elapsed)
 }
 
 func proc() {
@@ -223,7 +302,7 @@ func proc() {
 			for i := range work {
 				if i < len(f_list1) {
 					//process(f_list1[i], f_list2[i%len(f_list2)])
-					cut(f_list1[i], image.Rectangle{image.Point{0, 0}, image.Point{1024, 1024}})
+					cutFile(f_list1[i], image.Rectangle{image.Point{0, 0}, image.Point{1024, 1024}})
 				}
 			}
 		}()
