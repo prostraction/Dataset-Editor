@@ -23,7 +23,7 @@ var dir_second string
 var dir_merged string
 
 ////////////////////////////////////////////////////////////////////////////////////
-/* 			Image helpers 														  */
+/*               Image helpers                                                    */
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Gets minimum image dimension (img1, img2). Used for new image creation
@@ -76,7 +76,7 @@ func plusColors(c1 color.Color, c2 color.Color) color.Color {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-/* 				File helpers 													  */
+/*               File helpers                                                     */
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Opens file and return image from it
@@ -104,7 +104,7 @@ func openImage(path string) (image.Image, error) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-/* 				Operations 														  */
+/*               Operations                                                       */
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Returns img3 = img1 + img2
@@ -220,7 +220,7 @@ func cutFile(f os.FileInfo, boundsReq image.Rectangle) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-/*				Processes, which should be called by frontend					  */
+/*               Processes, which should be called by frontend                    */
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Creates Dir3 and fills it with images = (All images from dir1) + (All images from dir2).
