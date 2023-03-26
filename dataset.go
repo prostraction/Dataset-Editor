@@ -168,8 +168,8 @@ func cutImage(img *image.Image, xx int, yy int, boundsReq image.Rectangle) image
 // Create n cropped files from given file and given image dimension.
 // Example: if original file has 1024*1024 resolution and 256*256 dimension given,
 // then 4 files with 256*256 resolution will be created.
-func cutFile(f os.FileInfo, boundsReq image.Rectangle, dir string, dir_merged string) {
-	img, err := openImage(dir + f.Name())
+func cutFile(f os.FileInfo, boundsReq image.Rectangle, dir_in string, dir_result string) {
+	img, err := openImage(dir_in + f.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -191,7 +191,7 @@ func cutFile(f os.FileInfo, boundsReq image.Rectangle, dir string, dir_merged st
 			return
 		}
 		ext := filepath.Ext(strings.ToLower(f.Name()))
-		f, err := os.Create(dir_merged + f.Name()[:len(f.Name())-len(ext)] + "_" + strconv.Itoa(cycle) + filepath.Ext(f.Name()))
+		f, err := os.Create(dir_result + f.Name()[:len(f.Name())-len(ext)] + "_" + strconv.Itoa(cycle) + filepath.Ext(f.Name()))
 		if err == nil {
 			if filepath.Ext(strings.ToLower(f.Name())) == ".jpeg" || filepath.Ext(strings.ToLower(f.Name())) == ".jpg" {
 				jpeg.Encode(f, imgCrop, nil)
@@ -221,15 +221,15 @@ func cutFile(f os.FileInfo, boundsReq image.Rectangle, dir string, dir_merged st
 // Creates Dir3 and fills it with images = (All images from dir1) + (All images from dir2).
 // If count(dir2 images) < count(dir1 images), then merge algorithm proccess cyclically,
 // repeating merge dir2 images to remaining dir1 images.
-func ProcessMerge(dir_first string, dir_second string, dir_result string) {
+func ProcessMerge(dir_in_1 string, dir_in_2 string, dir_merged string) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
-	f_list1, err := ioutil.ReadDir(dir_first)
+	f_list1, err := ioutil.ReadDir(dir_in_1)
 	if err != nil {
 		panic(err)
 	}
 
-	f_list2, err := ioutil.ReadDir(dir_second)
+	f_list2, err := ioutil.ReadDir(dir_in_2)
 	if err != nil {
 		panic(err)
 	}
@@ -246,7 +246,7 @@ func ProcessMerge(dir_first string, dir_second string, dir_result string) {
 			defer wg.Done()
 			for i := range work {
 				if i < len(f_list1) {
-					mergeFile(f_list1[i], f_list2[i%len(f_list2)])
+					mergeFile(f_list1[i], f_list2[i%len(f_list2)], dir_in_1, dir_in_2, dir_merged)
 				}
 			}
 		}()
@@ -282,7 +282,7 @@ func ProcessCut(x int, y int, dir_in string, dir_result string) {
 			defer wg.Done()
 			for i := range work {
 				if i < len(f_list) {
-					cutFile(f_list[i], image.Rectangle{image.Point{0, 0}, image.Point{x, y}})
+					cutFile(f_list[i], image.Rectangle{image.Point{0, 0}, image.Point{x, y}}, dir_in, dir_result)
 				}
 			}
 		}()
