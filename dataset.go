@@ -17,11 +17,6 @@ import (
 	"time"
 )
 
-// var mu sync.Mutex
-var dir_first string
-var dir_second string
-var dir_merged string
-
 ////////////////////////////////////////////////////////////////////////////////////
 /*               Image helpers                                                    */
 ////////////////////////////////////////////////////////////////////////////////////
@@ -123,9 +118,9 @@ func mergeImage(img1 image.Image, img2 image.Image) (image.Image, error) {
 }
 
 // Creates new img file and fills it with img3 = img1 + img
-func mergeFile(f1 os.FileInfo, f2 os.FileInfo) {
-	img1, err1 := openImage(dir_first + f1.Name())
-	img2, err2 := openImage(dir_second + f2.Name())
+func mergeFile(f1 os.FileInfo, f2 os.FileInfo, dir_in_1 string, dir_in_2 string, dir_merged string) {
+	img1, err1 := openImage(dir_in_1 + f1.Name())
+	img2, err2 := openImage(dir_in_2 + f2.Name())
 	if err1 == nil && err2 == nil {
 		img_res, err := mergeImage(img1, img2)
 		if err != nil {
@@ -173,8 +168,8 @@ func cutImage(img *image.Image, xx int, yy int, boundsReq image.Rectangle) image
 // Create n cropped files from given file and given image dimension.
 // Example: if original file has 1024*1024 resolution and 256*256 dimension given,
 // then 4 files with 256*256 resolution will be created.
-func cutFile(f os.FileInfo, boundsReq image.Rectangle) {
-	img, err := openImage(dir_first + f.Name())
+func cutFile(f os.FileInfo, boundsReq image.Rectangle, dir string, dir_merged string) {
+	img, err := openImage(dir + f.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -267,77 +262,38 @@ func ProcessMerge(dir_first string, dir_second string, dir_result string) {
 	fmt.Printf("Time spent: %s\n", elapsed)
 }
 
-func proc() {
+// Cut all files from dir, placing resilt in dir_result
+func ProcessCut(x int, y int, dir_in string, dir_result string) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
-
-	dir_first = "./dataset_original/" //"E:\\dataset_cropped/"
-	dir_second = "./noise_patterns/"  //"E:\\noise_patterns/"
-	dir_merged = "./dataset/noise/"
-
-	//entries, err := os.ReadDir(dir_first)
-
-	f_list1, err := ioutil.ReadDir(dir_first)
+	f_list, err := ioutil.ReadDir(dir_in)
 	if err != nil {
 		panic(err)
 	}
-
-	/*f_list2, err := ioutil.ReadDir(dir_second)
-	if err != nil {
-		panic(err)
-	}*/
-
-	stack := make([]int, len(f_list1))
-	for i := 0; i < len(f_list1); i++ {
+	stack := make([]int, len(f_list))
+	for i := 0; i < len(f_list); i++ {
 		stack[i] = i
 	}
 	work := make(chan int)
-	//results := make(chan int)
-
 	wg := sync.WaitGroup{}
 	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for i := range work {
-				if i < len(f_list1) {
-					//process(f_list1[i], f_list2[i%len(f_list2)])
-					cutFile(f_list1[i], image.Rectangle{image.Point{0, 0}, image.Point{1024, 1024}})
+				if i < len(f_list) {
+					cutFile(f_list[i], image.Rectangle{image.Point{0, 0}, image.Point{x, y}})
 				}
 			}
 		}()
 	}
-
-	// send the work to the workers
-	// this happens in a goroutine in order
-	// to not block the main function, once
-	// all 5 workers are busy
-
 	go func() {
 		for _, s := range stack {
-			// could read the file from disk
-			// here and pass a pointer to the file
 			work <- s
 		}
-		// close the work channel after
-		// all the work has been send
 		close(work)
-
-		// wait for the workers to finish
-		// then close the results channel
-		//wg.Wait()
-		//close(results)
 	}()
 	wg.Wait()
-	// collect the results
-	// the iteration stops if the results
-	// channel is closed and the last value
-	// has been received
-
-	//for result := range results {
-	// could write the file to disk
-	//	fmt.Println(result)
-	//}
 	elapsed := time.Since(start)
 	fmt.Printf("Time spent: %s\n", elapsed)
 }
