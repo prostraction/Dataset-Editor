@@ -35,5 +35,8 @@ func (a *App) SetDirectoryDialog() string {
 	} else {
 		return "Dialog cancelled"
 	}
+}
 
+func (a *App) StartMergeProcess(dir_in_1 string, dir_in_2 string, dir_merged string) {
+	ProcessMerge(dir_in_1, dir_in_2, dir_merged)
 }

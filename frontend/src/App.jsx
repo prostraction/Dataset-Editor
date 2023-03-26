@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 import { SetDirectoryDialog } from "../wailsjs/go/main/App";
+import { StartMergeProcess } from "../wailsjs/go/main/App";
 
 function App() {
   //const [resultText, setResultText] = useState(
@@ -24,6 +25,9 @@ function App() {
   }
   function SetDirectory2() {
     SetDirectoryDialog().then(updateDir2Text);
+  }
+  function CallMergeProgress() {
+    StartMergeProcess("test", "test", "test")
   }
   //<input id="dirSelected" directory="" webkitdirectory="" type="file" />
   return (
