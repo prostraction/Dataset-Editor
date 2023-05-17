@@ -32,22 +32,23 @@ function App() {
   //<input id="dirSelected" directory="" webkitdirectory="" type="file" />
   return (
     <div id="App">
-      <div class="selectDirField">
-        <text id="selectdir1" className="selectdir1">
-          {dir1}
-        </text>
-        <button className="btn" onClick={SetDirectory1}>
-          Select First
-        </button>
-      </div>
-
-      <div class="selectDirField">
-        <text id="selectdir2" className="selectdir2">
-          {dir2}
-        </text>
-        <button className="btn" onClick={SetDirectory2}>
-          Select Second
-        </button>
+      <div class="selectDataset">
+        <div class="selectDirField">
+          <text id="selectdir1" className="selectdir1">
+            {dir1}
+          </text>
+          <button className="btn" onClick={SetDirectory1}>
+            Select First
+          </button>
+        </div>
+        <div class="selectDirField">
+          <text id="selectdir2" className="selectdir2">
+            {dir2}
+          </text>
+          <button className="btn" onClick={SetDirectory2}>
+            Select Second
+          </button>
+        </div>
       </div>
     </div>
   );
