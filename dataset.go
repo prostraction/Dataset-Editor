@@ -53,9 +53,8 @@ func clamp(value, min, max uint32) uint32 {
 		return min
 	} else if value > max {
 		return max
-	} else {
-		return value
 	}
+	return value
 }
 
 // Returns pixel3 (RGBA) = pixel1 (RGBA) + pixel2 (RGBA)
@@ -222,6 +221,7 @@ func cutFile(f os.FileInfo, boundsReq image.Rectangle, dir_in string, dir_result
 // If count(dir2 images) < count(dir1 images), then merge algorithm proccess cyclically,
 // repeating merge dir2 images to remaining dir1 images.
 func ProcessMerge(dir_in_1 string, dir_in_2 string, dir_merged string) {
+	fmt.Println(dir_in_1, dir_in_2)
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
 	f_list1, err := ioutil.ReadDir(dir_in_1)
@@ -263,7 +263,7 @@ func ProcessMerge(dir_in_1 string, dir_in_2 string, dir_merged string) {
 }
 
 // Cut all files from dir, placing resilt in dir_result
-func ProcessCut(x int, y int, dir_in string, dir_result string) {
+func ProcessCut(dir_in string, dir_result string, x int, y int) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
 	f_list, err := ioutil.ReadDir(dir_in)

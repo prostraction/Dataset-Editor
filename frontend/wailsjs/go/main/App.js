@@ -6,6 +6,10 @@ export function SetDirectoryDialog() {
   return window['go']['main']['App']['SetDirectoryDialog']();
 }
 
+export function StartCropProcess(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['StartCropProcess'](arg1, arg2, arg3, arg4);
+}
+
 export function StartMergeProcess(arg1, arg2, arg3) {
   return window['go']['main']['App']['StartMergeProcess'](arg1, arg2, arg3);
 }

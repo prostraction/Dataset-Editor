@@ -27,7 +27,7 @@ func (a *App) SetDirectoryDialog() string {
 		DefaultDirectory:           ".",
 		Title:                      "123",
 		ShowHiddenFiles:            true,
-		CanCreateDirectories:       false,
+		CanCreateDirectories:       true,
 		ResolvesAliases:            false,
 		TreatPackagesAsDirectories: true})
 	if len(result) > 0 {
@@ -37,6 +37,12 @@ func (a *App) SetDirectoryDialog() string {
 	}
 }
 
-func (a *App) StartMergeProcess(dir_in_1 string, dir_in_2 string, dir_merged string) {
-	ProcessMerge(dir_in_1, dir_in_2, dir_merged)
+func (a *App) StartMergeProcess(dir_in_1 string, dir_in_2 string, dir_merged string) bool {
+	ProcessMerge(dir_in_1+"\\", dir_in_2+"\\", dir_merged+"\\")
+	return true
+}
+
+func (a *App) StartCropProcess(dir_in_1 string, dir_result string, x int, y int) bool {
+	ProcessCut(dir_in_1+"\\", dir_result+"\\", x, y)
+	return true
 }

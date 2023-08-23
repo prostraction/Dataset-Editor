@@ -2,6 +2,7 @@ html {
     background-color: #212121;
     text-align: center;
     color: white;
+    font-size: 18px;
 }
 
 body {
@@ -18,9 +19,4 @@ body {
     font-weight: 400;
     src: local(""),
     url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
-}
-
-#app {
-    height: 100vh;
-    text-align: center;
 }

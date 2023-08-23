@@ -1,18 +1,73 @@
-#app {
-    height: 100vh;
+button {
+    appearance: none;
+    background-color: #2ea44f;
+    border: 1px solid rgba(27, 31, 35, .15);
+    border-radius: 6px;
+    box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+    box-sizing: border-box;
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    padding: 6px 16px;
+    position: relative;
     text-align: center;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    vertical-align: middle;
+    white-space: nowrap;
 }
 
-.selectDataset > * {
-    display: block;
+
+button:focus:not(:focus-visible):not(.focus-visible) {
+    box-shadow: none;
+    outline: none;
+}
+
+button:hover {
+    background-color: #2c974b;
+}
+
+button:focus {
+    box-shadow: rgba(46, 164, 79, .4) 0 0 0 3px;
+    outline: none;
+}
+
+button:disabled {
+    background-color: #94d3a2;
+    border-color: rgba(27, 31, 35, .1);
+    color: rgba(255, 255, 255, .8);
+    cursor: default;
+}
+
+button:active {
+    background-color: #298e46;
+    box-shadow: rgba(20, 70, 32, .2) 0 1px 0 inset;
 }
 
 .selectDataset {
+    accent-color: #2ea44f;
     position: absolute;
     left: 50%;
     top: 50%;
     margin-right: -50%;
     transform: translate(-50%, -50%);
+}
+
+input[type=radio] {
+    border: 0px;
+    width: 18px;
+    height: 18px;
+}
+
+input[type=radio]:focus {
+    outline: none;
+    box-shadow: none;
 }
 
 .result {
@@ -21,50 +76,80 @@
     margin: 1.5rem auto;
 }
 
-.input-box .btn {
-    width: 120px;
-    height: 30px;
-    line-height: 30px;
-    border-radius: 3px;
-    border: none;
-    margin: 0 0 0 20px;
-    padding: 0 8px;
-    cursor: pointer;
+.selectDirs {
+    margin-top: 50px;
 }
 
-.input-box .btn:hover {
-    background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-    color: #333333;
+.selectDirField {
+    display: flex;
+    justify-content: space-between;
 }
 
-.input-box .input {
-    border: none;
-    border-radius: 3px;
-    outline: none;
-    height: 30px;
-    width: 300px;
-    line-height: 30px;
-    padding: 0 10px;
-    background-color: rgba(240, 240, 240, 1);
-    -webkit-font-smoothing: antialiased;
-}
-
-.input-box .input:hover {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
-}
-
-.input-box .input:focus {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
-}
-
-.selectDirField > * {
+.selectDirField>* {
+    padding: 0;
     height: 30px;
     margin-right: 20px;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
-.selectDirField > .btn {
-    width: 110px;
+.selectDirField>.btn {
+    margin-left: 20px;
+    height: 34px;
+    width: 100px;
+}
+
+.cropEnabled > div:last-child {
+    margin-top: 27px;
+}
+
+.selectDataset>div {
+    user-select: none;
+}
+
+.radios {
+    margin: auto;
+}
+
+.radios:not(:last-child) {
+    margin-right: 20px;
+}
+
+.selectDataset>div>label {
+    user-select: none;
+}
+
+#selectdir1,
+#selectdir2,
+#selectdir3 {
+    margin: auto;
+}
+
+.hide {
+    display: none !important;
+}
+
+input {
+    width: 40px;
+    margin-left: 5px;
+    padding: 2px;
+    min-height: 20px;
+    max-height: 20px;
+    border-radius: 6px;
+    vertical-align: middle;
+}
+input:focus {
+    outline: none;
+    border-color: #2ea44f;
+    box-shadow: rgba(46, 164, 79, .4) 0 0 0 1px;
+}
+
+.sizes {
+    display: flex;
+    justify-content:center;
+}
+
+.start {
+    height: 38px;
+    width: 200px;
+    margin-top: 50px;
 }
