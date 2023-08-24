@@ -146,6 +146,7 @@ input:focus {
 .sizes {
     display: flex;
     justify-content:center;
+    margin-top: 27px;
 }
 
 .start {

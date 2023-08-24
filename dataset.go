@@ -56,6 +56,14 @@ func clamp(value, min, max uint32) uint32 {
 	}
 	return value
 }
+func clampFloat(value, min, max float64) float64 {
+	if value < min {
+		return min
+	} else if value > max {
+		return max
+	}
+	return value
+}
 
 // Returns pixel3 (RGBA) = pixel1 (RGBA) + pixel2 (RGBA)
 func plusColors(c1 color.Color, c2 color.Color) color.Color {
@@ -213,87 +221,131 @@ func cutFile(f os.FileInfo, boundsReq image.Rectangle, dir_in string, dir_result
 	}
 }
 
+// Returns image with increased brightness by factor (8 = 3EV).
+func increaseBrightnessImage(img image.Image, factor float64) image.Image {
+	bounds := img.Bounds()
+	newImg := image.NewRGBA(bounds)
+
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			r, g, b, a := img.At(x, y).RGBA()
+
+			newR := clampFloat(float64(r)*factor, 0, 65535)
+			newG := clampFloat(float64(g)*factor, 0, 65535)
+			newB := clampFloat(float64(b)*factor, 0, 65535)
+
+			/*
+
+				if newR > 20000 && newG > 20000 && newB > 20000 {
+					newColor := color.RGBA64{R: uint16(newR), G: uint16(newG), B: uint16(newB), A: uint16(a)}
+					newImg.Set(x, y, newColor)
+				} else {
+					newColor := color.RGBA64{R: uint16(0), G: uint16(0), B: uint16(0), A: uint16(a)}
+					newImg.Set(x, y, newColor)
+				}
+
+			*/
+
+			newColor := color.RGBA64{R: uint16(newR), G: uint16(newG), B: uint16(newB), A: uint16(a)}
+			newImg.Set(x, y, newColor)
+		}
+	}
+
+	return newImg
+}
+
+func increaseBrightnessFile(fInfo os.FileInfo, factor int, dir_in string, dir_result string) {
+	img, err := openImage(dir_in + fInfo.Name())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	imgBrigthness := increaseBrightnessImage(img, float64(factor))
+	ext := filepath.Ext(strings.ToLower(fInfo.Name()))
+	f, err := os.Create(dir_result + fInfo.Name()[:len(fInfo.Name())-len(ext)] + "_" + strconv.Itoa(factor) + filepath.Ext(fInfo.Name()))
+	if err == nil {
+		if filepath.Ext(strings.ToLower(f.Name())) == ".jpeg" || filepath.Ext(strings.ToLower(f.Name())) == ".jpg" {
+			jpeg.Encode(f, imgBrigthness, nil)
+		} else if filepath.Ext(strings.ToLower(f.Name())) == ".png" {
+			png.Encode(f, imgBrigthness)
+		} else {
+			fmt.Println("wrong type")
+		}
+		f.Close()
+	} else {
+		fmt.Println(err)
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 /*               Processes, which should be called by frontend                    */
 ////////////////////////////////////////////////////////////////////////////////////
 
-// Creates Dir3 and fills it with images = (All images from dir1) + (All images from dir2).
-// If count(dir2 images) < count(dir1 images), then merge algorithm proccess cyclically,
-// repeating merge dir2 images to remaining dir1 images.
-func ProcessMerge(dir_in_1 string, dir_in_2 string, dir_merged string) {
-	fmt.Println(dir_in_1, dir_in_2)
+// Main helper, provoke all needed function
+func processFiles(dirIn1, dirIn2, dirOut string, action func(os.FileInfo, os.FileInfo, string, string, string)) {
+	fmt.Println(dirIn1, dirIn2)
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
-	f_list1, err := ioutil.ReadDir(dir_in_1)
+
+	fileList1, err := ioutil.ReadDir(dirIn1)
 	if err != nil {
 		panic(err)
 	}
 
-	f_list2, err := ioutil.ReadDir(dir_in_2)
-	if err != nil {
-		panic(err)
+	var fileList2 []os.FileInfo
+	if dirIn2 != "" {
+		fileList2, err = ioutil.ReadDir(dirIn2)
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	stack := make([]int, len(f_list1))
-	for i := 0; i < len(f_list1); i++ {
-		stack[i] = i
+	work := make(chan int, len(fileList1))
+	for i := range fileList1 {
+		work <- i
 	}
-	work := make(chan int)
+	close(work)
+
 	wg := sync.WaitGroup{}
 	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for i := range work {
-				if i < len(f_list1) {
-					mergeFile(f_list1[i], f_list2[i%len(f_list2)], dir_in_1, dir_in_2, dir_merged)
+				if i < len(fileList1) {
+					if len(fileList2) > 0 {
+						action(fileList1[i], fileList2[i%len(fileList2)], dirIn1, dirIn2, dirOut)
+					} else {
+						action(fileList1[i], nil, dirIn1, "", dirOut)
+					}
 				}
 			}
 		}()
 	}
-	go func() {
-		for _, s := range stack {
-			work <- s
-		}
-		close(work)
-	}()
 	wg.Wait()
+
 	elapsed := time.Since(start)
 	fmt.Printf("Time spent: %s\n", elapsed)
 }
 
+// Creates Dir3 and fills it with images = (All images from dir1) + (All images from dir2).
+// If count(dir2 images) < count(dir1 images), then merge algorithm proccess cyclically,
+// repeating merge dir2 images to remaining dir1 images.
+func ProcessMerge(dirIn1, dirIn2, dirMerged string) {
+	processFiles(dirIn1, dirIn2, dirMerged, mergeFile)
+}
+
 // Cut all files from dir, placing resilt in dir_result
-func ProcessCut(dir_in string, dir_result string, x int, y int) {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	start := time.Now()
-	f_list, err := ioutil.ReadDir(dir_in)
-	if err != nil {
-		panic(err)
+func ProcessCut(dirIn, dirResult string, x, y int) {
+	cut := func(fileInfo os.FileInfo, _ os.FileInfo, dirIn, _, dirResult string) {
+		cutFile(fileInfo, image.Rectangle{image.Point{0, 0}, image.Point{x, y}}, dirIn, dirResult)
 	}
-	stack := make([]int, len(f_list))
-	for i := 0; i < len(f_list); i++ {
-		stack[i] = i
+	processFiles(dirIn, "", dirResult, cut)
+}
+
+func ProcessBrightness(dirIn, dirResult string, factor int) {
+	factorFunc := func(fileInfo os.FileInfo, _ os.FileInfo, dirIn, _, dirResult string) {
+		increaseBrightnessFile(fileInfo, factor, dirIn, dirResult)
 	}
-	work := make(chan int)
-	wg := sync.WaitGroup{}
-	for cpu := 0; cpu < runtime.NumCPU(); cpu++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for i := range work {
-				if i < len(f_list) {
-					cutFile(f_list[i], image.Rectangle{image.Point{0, 0}, image.Point{x, y}}, dir_in, dir_result)
-				}
-			}
-		}()
-	}
-	go func() {
-		for _, s := range stack {
-			work <- s
-		}
-		close(work)
-	}()
-	wg.Wait()
-	elapsed := time.Since(start)
-	fmt.Printf("Time spent: %s\n", elapsed)
+	processFiles(dirIn, "", dirResult, factorFunc)
 }

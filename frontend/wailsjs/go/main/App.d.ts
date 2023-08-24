@@ -6,3 +6,5 @@ export function SetDirectoryDialog():Promise<string>;
 export function StartCropProcess(arg1:string,arg2:string,arg3:number,arg4:number):Promise<boolean>;
 
 export function StartMergeProcess(arg1:string,arg2:string,arg3:string):Promise<boolean>;
+
+export function StartProcessBrightness(arg1:string,arg2:string,arg3:number):Promise<boolean>;

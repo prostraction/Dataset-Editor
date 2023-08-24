@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -37,11 +38,19 @@ func (a *App) SetDirectoryDialog() string {
 }
 
 func (a *App) StartMergeProcess(dir_in_1 string, dir_in_2 string, dir_merged string) bool {
+	fmt.Println("Merge called")
 	ProcessMerge(dir_in_1+"\\", dir_in_2+"\\", dir_merged+"\\")
 	return true
 }
 
 func (a *App) StartCropProcess(dir_in_1 string, dir_result string, x int, y int) bool {
+	fmt.Println("Crop called")
 	ProcessCut(dir_in_1+"\\", dir_result+"\\", x, y)
+	return true
+}
+
+func (a *App) StartProcessBrightness(dir_in_1 string, dir_result string, factor int) bool {
+	fmt.Println("Brightness called")
+	ProcessBrightness(dir_in_1+"\\", dir_result+"\\", factor)
 	return true
 }
