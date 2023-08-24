@@ -83,17 +83,24 @@ export default class App extends React.Component {
     } else {
       queryY.style.color = '#000000';
     }
+    
     if (ready) {
       document.body.querySelectorAll('button').forEach((element) =>{
-        element.style.disabled = 'true'
+        element.style.backgroundColor = '#808080'
+        element.disabled = true;
       })
+
       this.state.isMergeEnabled ? 
         StartMergeProcess(this.state.dir1, this.state.dir2, this.state.dir3) : 
         StartCropProcess(this.state.dir1, this.state.dir3, x, y)
-    }
 
-    //StartMergeProcess('test', 'test', 'test');
+      document.body.querySelectorAll('button').forEach((element) =>{
+        element.style.backgroundColor = '#2ea44f'
+        element.disabled = false;
+      })
+    }
   };
+  
 
   render() {
     return (

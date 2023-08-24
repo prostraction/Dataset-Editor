@@ -25,16 +25,15 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) SetDirectoryDialog() string {
 	result, _ := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
 		DefaultDirectory:           ".",
-		Title:                      "123",
+		Title:                      "Choose directory",
 		ShowHiddenFiles:            true,
 		CanCreateDirectories:       true,
 		ResolvesAliases:            false,
 		TreatPackagesAsDirectories: true})
 	if len(result) > 0 {
 		return result
-	} else {
-		return "Dialog cancelled"
 	}
+	return "Dialog cancelled"
 }
 
 func (a *App) StartMergeProcess(dir_in_1 string, dir_in_2 string, dir_merged string) bool {
