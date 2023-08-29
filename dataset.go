@@ -213,7 +213,7 @@ func cutFile(f os.FileInfo, boundsReq image.Rectangle, dir_in string, dir_result
 		}
 
 		xx += boundsReq.Max.X
-		if xx+boundsReq.Max.X >= bounds.Max.X {
+		if xx+boundsReq.Max.X > bounds.Max.X {
 			xx = 0
 			yy += boundsReq.Max.Y
 		}
