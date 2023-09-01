@@ -154,3 +154,75 @@ input:focus {
     width: 200px;
     margin-top: 50px;
 }
+
+.scheduler {
+    position: relative;
+    width: 100%;
+    display: grid;
+    align-items:center;
+    grid-template-columns: 90% auto;
+    border-bottom: 1px solid grey;
+    background-color: #121212;
+    vertical-align: middle;
+}
+
+.scheduler > * {
+    padding: 5px;
+}
+
+.viewTaskButton {
+    margin-top: 0;
+    margin-bottom: 4px;
+    padding: 5px;
+    font-size: 14px;
+    width: 100px;
+}
+
+.tasksView{
+    width: 100%;
+}
+
+.tasksView ol {
+    max-width: 100%;
+    margin-left: 0%;
+    margin-right: 5%;
+}
+
+.tasksView li{
+    display: grid;
+    text-align: center;
+    grid-template-columns: 1fr 150px;
+    align-items:center;
+    padding: 5px;
+    margin-bottom: 4px;
+    list-style-type: none;
+    border-bottom: 1px solid darkgray;
+}
+
+.taskViewLeft{
+    display: table-cell;
+    text-align: left;
+    vertical-align: middle;
+    align-self: left;
+    justify-self: left;
+}
+
+.taskViewRight{
+    display: table-cell;
+    text-align: right;
+    align-self: right;
+    justify-self: right;
+}
+
+.sch_left {
+    margin-left: 15px;
+    display: table-cell;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.sch_right {
+    margin-right: 15px;
+    display: table-cell;
+    text-align: right;
+}
