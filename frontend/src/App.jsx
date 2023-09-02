@@ -1,5 +1,6 @@
 import * as React from 'react';
 import './App.css';
+import { GetProcentValue } from '../wailsjs/go/main/App';
 import { IsTaskFinished } from '../wailsjs/go/main/App';
 import { SetDirectoryDialog } from '../wailsjs/go/main/App';
 import { StartMergeProcess } from '../wailsjs/go/main/App';
@@ -14,6 +15,7 @@ export default class App extends React.Component {
       completedTasks: 0,
       allTasks: 0,
       viewTasks: false,
+      currentPercent: 0.000,
       currentOperationLabel: 'Ready.',
       operation: 0,
       operations: [],
@@ -127,7 +129,7 @@ export default class App extends React.Component {
       queryBr.style.color = '#000000';
     }
 
-    if (true) {
+    if (ready) {
       let taskCount = this.state.allTasks + 1;
       let operations = this.state.operations; operations.push(this.state.operation)
       let dirs1 = this.state.dirs1; dirs1.push(this.state.dir1);
@@ -172,18 +174,32 @@ export default class App extends React.Component {
     console.log(this.state);
   }
 
+  GetTaskValue = () => {
+    setTimeout(() => {
+      GetProcentValue().then(result => {
+        this.setState({currentPercent: parseInt(result)});
+        console.log(this.state.currentPercent);
+      })
+      if (this.state.isRunning) {
+        this.GetTaskValue()
+      }
+    }, 100);
+  }
+
   ProgressOneItem = async (ind) => {
-    document.body.querySelectorAll('button').forEach((element) =>{
+    /*document.body.querySelectorAll('button').forEach((element) =>{
       element.style.backgroundColor = '#808080'
       element.disabled = true;
-    })
+    })*/
+    this.GetTaskValue();
+    
     switch (this.state.operations[ind]) {
       case 0: {
         await StartCropProcess(this.state.dirs1[ind], this.state.dirs3[ind], this.state.x[ind], this.state.y[ind]);
         break;
       }
       case 1: {
-        await StartMergeProcess(this.state.dirs1[ind], this.state.dirs2[ind], this.state.dir3[ind]);  
+        await StartMergeProcess(this.state.dirs1[ind], this.state.dirs2[ind], this.state.dirs3[ind]);  
         break;
       }
       case 2: {
@@ -191,10 +207,10 @@ export default class App extends React.Component {
         break;
       }
     }
-    document.body.querySelectorAll('button').forEach((element) =>{
+    /*document.body.querySelectorAll('button').forEach((element) =>{
       element.style.backgroundColor = '#2ea44f'
       element.disabled = false;
-    })
+    })*/
   };
 
   Progress = async () => {
@@ -238,7 +254,7 @@ export default class App extends React.Component {
       <div id='App'>
         <div className='scheduler'>
           <div className='sch_left'>
-          Tasks: {this.state.completedTasks}/{this.state.allTasks}&emsp;Task progress: 0%&emsp;<button className='viewTaskButton' onClick={this.ViewTasks}>{`${this.state.viewTasks ? 'Hide tasks' : 'View tasks'}`}</button><br></br> {this.state.currentOperationLabel}
+          Completed tasks: {this.state.completedTasks}/{this.state.allTasks}&emsp;Task progress: {this.state.currentPercent}%&emsp;<button className='viewTaskButton' onClick={this.ViewTasks}>{`${this.state.viewTasks ? 'Hide tasks' : 'View tasks'}`}</button><br></br> {this.state.currentOperationLabel}
           </div>
           <div className='sch_right'>
             <button onClick={this.Progress}>Run all</button>

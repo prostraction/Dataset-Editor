@@ -282,8 +282,8 @@ func increaseBrightnessFile(fInfo os.FileInfo, factor int, dir_in string, dir_re
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Main helper, provoke all needed function
-func processFiles(dirIn1, dirIn2, dirOut string, action func(os.FileInfo, os.FileInfo, string, string, string)) {
-	fmt.Println(dirIn1, dirIn2)
+func (a *App) processFiles(dirIn1, dirIn2, dirOut string, action func(os.FileInfo, os.FileInfo, string, string, string)) {
+	fmt.Println(dirIn1, dirIn2, dirOut)
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
 
@@ -318,8 +318,13 @@ func processFiles(dirIn1, dirIn2, dirOut string, action func(os.FileInfo, os.Fil
 					} else {
 						action(fileList1[i], nil, dirIn1, "", dirOut)
 					}
+					procent := 100 * (float32(i) / float32(len(fileList1)))
+					if procent > a.taskProcent {
+						a.taskProcent = procent
+					}
 				}
 			}
+			a.taskProcent = 100.000
 		}()
 	}
 	wg.Wait()
@@ -331,21 +336,21 @@ func processFiles(dirIn1, dirIn2, dirOut string, action func(os.FileInfo, os.Fil
 // Creates Dir3 and fills it with images = (All images from dir1) + (All images from dir2).
 // If count(dir2 images) < count(dir1 images), then merge algorithm proccess cyclically,
 // repeating merge dir2 images to remaining dir1 images.
-func ProcessMerge(dirIn1, dirIn2, dirMerged string) {
-	processFiles(dirIn1, dirIn2, dirMerged, mergeFile)
+func (a *App) ProcessMerge(dirIn1, dirIn2, dirMerged string) {
+	a.processFiles(dirIn1, dirIn2, dirMerged, mergeFile)
 }
 
 // Cut all files from dir, placing resilt in dir_result
-func ProcessCut(dirIn, dirResult string, x, y int) {
+func (a *App) ProcessCut(dirIn, dirResult string, x, y int) {
 	cut := func(fileInfo os.FileInfo, _ os.FileInfo, dirIn, _, dirResult string) {
 		cutFile(fileInfo, image.Rectangle{image.Point{0, 0}, image.Point{x, y}}, dirIn, dirResult)
 	}
-	processFiles(dirIn, "", dirResult, cut)
+	a.processFiles(dirIn, "", dirResult, cut)
 }
 
-func ProcessBrightness(dirIn, dirResult string, factor int) {
+func (a *App) ProcessBrightness(dirIn, dirResult string, factor int) {
 	factorFunc := func(fileInfo os.FileInfo, _ os.FileInfo, dirIn, _, dirResult string) {
 		increaseBrightnessFile(fileInfo, factor, dirIn, dirResult)
 	}
-	processFiles(dirIn, "", dirResult, factorFunc)
+	a.processFiles(dirIn, "", dirResult, factorFunc)
 }
