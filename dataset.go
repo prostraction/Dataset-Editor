@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dataset/internal/database"
 	"errors"
 	"fmt"
 	"image"
@@ -8,6 +9,7 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -75,6 +77,15 @@ func plusColors(c1 color.Color, c2 color.Color) color.Color {
 	a3 := clamp(a1+a2, 0, 65535)
 	rgba := color.RGBA64{uint16(r3), uint16(g3), uint16(b3), uint16(a3)}
 	return color.Color(rgba)
+}
+
+func uint32toByte(from uint32) (to byte) {
+	sqrt := math.Sqrt(float64(from))
+	sqrtUint32 := uint32(sqrt)
+	if sqrtUint32 > 255 {
+		sqrtUint32 = 255
+	}
+	return byte(sqrtUint32)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -234,6 +245,8 @@ func increaseBrightnessImage(img image.Image, factor float64) image.Image {
 			newG := clampFloat(float64(g)*factor, 0, 65535)
 			newB := clampFloat(float64(b)*factor, 0, 65535)
 
+			//fmt.Println(factor, newR, newG, newB)
+
 			/*
 
 				if newR > 20000 && newG > 20000 && newB > 20000 {
@@ -254,15 +267,16 @@ func increaseBrightnessImage(img image.Image, factor float64) image.Image {
 	return newImg
 }
 
-func increaseBrightnessFile(fInfo os.FileInfo, factor int, dir_in string, dir_result string) {
+func increaseBrightnessFile(fInfo os.FileInfo, ff float64, dir_in string, dir_result string) {
 	img, err := openImage(dir_in + fInfo.Name())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	factor := ff //0.1 + float64(rand.Intn(20))/100
 	imgBrigthness := increaseBrightnessImage(img, float64(factor))
 	ext := filepath.Ext(strings.ToLower(fInfo.Name()))
-	f, err := os.Create(dir_result + fInfo.Name()[:len(fInfo.Name())-len(ext)] + "_" + strconv.Itoa(factor) + filepath.Ext(fInfo.Name()))
+	f, err := os.Create(dir_result + fInfo.Name()[:len(fInfo.Name())-len(ext)] + "_" + fmt.Sprintf("%f", factor) + filepath.Ext(fInfo.Name()))
 	if err == nil {
 		if filepath.Ext(strings.ToLower(f.Name())) == ".jpeg" || filepath.Ext(strings.ToLower(f.Name())) == ".jpg" {
 			jpeg.Encode(f, imgBrigthness, nil)
@@ -275,6 +289,42 @@ func increaseBrightnessFile(fInfo os.FileInfo, factor int, dir_in string, dir_re
 	} else {
 		fmt.Println(err)
 	}
+}
+
+func dotsFromFileToDb(fInfo os.FileInfo, dir_in string, db *database.Database) {
+	img, err := openImage(dir_in + fInfo.Name())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	bounds := img.Bounds()
+
+	var dot database.Dot
+	dot.Filename = fInfo.Name()
+	dot.Content = make([]byte, 0, 128)
+
+	c := 0
+
+	// searching for start of dot (left upper corner)
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			r, g, b, _ := img.At(x, y).RGBA()
+			if r >= 100 && g >= 100 && b >= 100 {
+				c++
+
+				// found left upper corner
+
+				/*
+					dot.Content = append(dot.Content, uint32toByte(r))
+					dot.Content = append(dot.Content, uint32toByte(g))
+					dot.Content = append(dot.Content, uint32toByte(b))
+				*/
+			}
+		}
+	}
+
+	fmt.Println("Found ", c, " pixels")
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -348,9 +398,16 @@ func (a *App) ProcessCut(dirIn, dirResult string, x, y int) {
 	a.processFiles(dirIn, "", dirResult, cut)
 }
 
-func (a *App) ProcessBrightness(dirIn, dirResult string, factor int) {
+func (a *App) ProcessBrightness(dirIn, dirResult string, factor float64) {
 	factorFunc := func(fileInfo os.FileInfo, _ os.FileInfo, dirIn, _, dirResult string) {
 		increaseBrightnessFile(fileInfo, factor, dirIn, dirResult)
 	}
 	a.processFiles(dirIn, "", dirResult, factorFunc)
+}
+
+func (a *App) ProcessDotsToDB(dirIn string) {
+	dotsFunc := func(fileInfo os.FileInfo, _ os.FileInfo, dirIn, _, _ string) {
+		dotsFromFileToDb(fileInfo, dirIn, &a.db)
+	}
+	a.processFiles(dirIn, "", "", dotsFunc)
 }

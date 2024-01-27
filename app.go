@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"dataset/internal/database"
+
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
 type App struct {
 	ctx            context.Context
+	db             database.Database
 	lastDir        string
 	isTaskFinished bool
 	taskProcent    float32
@@ -53,6 +56,7 @@ func (a *App) IsTaskFinished() bool {
 }
 
 func (a *App) StartMergeProcess(dir_in_1 string, dir_in_2 string, dir_merged string) bool {
+	a.taskProcent = 0.00
 	a.isTaskFinished = false
 	fmt.Println("Merge called")
 	a.ProcessMerge(dir_in_1+"\\", dir_in_2+"\\", dir_merged+"\\")
@@ -61,6 +65,7 @@ func (a *App) StartMergeProcess(dir_in_1 string, dir_in_2 string, dir_merged str
 }
 
 func (a *App) StartCropProcess(dir_in_1 string, dir_result string, x int, y int) bool {
+	a.taskProcent = 0.00
 	a.isTaskFinished = false
 	fmt.Println("Crop called")
 	a.ProcessCut(dir_in_1+"\\", dir_result+"\\", x, y)
@@ -68,10 +73,30 @@ func (a *App) StartCropProcess(dir_in_1 string, dir_result string, x int, y int)
 	return true
 }
 
-func (a *App) StartProcessBrightness(dir_in_1 string, dir_result string, factor int) bool {
+func (a *App) StartBrightnessProcess(dir_in_1 string, dir_result string, factor float64) bool {
+	a.taskProcent = 0.00
 	a.isTaskFinished = false
 	fmt.Println("Brightness called")
 	a.ProcessBrightness(dir_in_1+"\\", dir_result+"\\", factor)
+	a.isTaskFinished = true
+	return true
+}
+
+// TO DO: add URI to args
+func (a *App) StartDotsToDbProccess(dir_in_1 string) bool {
+	a.taskProcent = 0.00
+	a.isTaskFinished = false
+	fmt.Println("Dots to DB called")
+	var err error
+	if !a.db.IsInit {
+		err = a.db.Init()
+	}
+	if err != nil {
+		fmt.Println(err.Error())
+		a.isTaskFinished = true
+		return true
+	}
+	a.ProcessDotsToDB(dir_in_1 + "\\")
 	a.isTaskFinished = true
 	return true
 }

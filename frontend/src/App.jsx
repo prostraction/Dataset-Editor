@@ -5,7 +5,8 @@ import { IsTaskFinished } from '../wailsjs/go/main/App';
 import { SetDirectoryDialog } from '../wailsjs/go/main/App';
 import { StartMergeProcess } from '../wailsjs/go/main/App';
 import { StartCropProcess } from '../wailsjs/go/main/App';
-import { StartProcessBrightness } from '../wailsjs/go/main/App' 
+import { StartBrightnessProcess } from '../wailsjs/go/main/App' 
+import { StartDotsToDbProccess } from '../wailsjs/go/main/App' 
 
 export default class App extends React.Component {
   constructor(props) {
@@ -20,7 +21,7 @@ export default class App extends React.Component {
       operation: 0,
       operations: [],
       humanReadableOperations: [],
-      checked: [1, 0, 0],
+      checked: [1, 0, 0, 0, 0],
       dir1: 'Files directory', dir1Selected: false,
       dirs1: [],
       dir2: 'Second files directory', dir2Selected: false,
@@ -29,7 +30,7 @@ export default class App extends React.Component {
       dirs3: [],
       x: [],
       y: [],
-      br: [],
+      br: [], // TO DO: add URI
     };
 
     this.SetDirectory1 = this.SetDirectory1.bind(this);
@@ -70,22 +71,30 @@ export default class App extends React.Component {
 
   ChangeMode = () => {
     let flag = 0;
-    let checked = [0, 0, 0]
+    let checked = [0, 0, 0, 0, 0]
     if (document.body.querySelector('#crop').checked) {
-      checked = [1, 0, 0]
+      checked = [1, 0, 0, 0, 0]
       flag = 0;
     }
     if (document.body.querySelector('#merge').checked) {
-      checked = [0, 1, 0]
+      checked = [0, 1, 0, 0, 0]
       flag = 1;
     }
     if (document.body.querySelector('#brightness').checked) {
-      checked = [0, 0, 1]
+      checked = [0, 0, 1, 0, 0]
       flag = 2;
+    }
+    if (document.body.querySelector('#dotsToDB').checked) {
+      checked = [0, 0, 0, 1, 0]
+      flag = 3;
+    }
+    if (document.body.querySelector('#dotsFromDB').checked) {
+      checked = [0, 0, 0, 0, 1]
+      flag = 4;
     }
     let dirText = this.state.dir1;
     if (!this.state.dir1Selected) {
-      dirText = flag ? 'Files directory' : 'First files directory';
+      dirText = (flag === 0 || flag === 3) ? 'Files directory' : 'First files directory';
     }
     document.body.querySelector('#selectdir1').style.color = '#FFFFFF'
     document.body.querySelector('#selectdir2').style.color = '#FFFFFF'
@@ -97,14 +106,14 @@ export default class App extends React.Component {
     let ready = true;
     if (!this.state.dir1Selected) {document.body.querySelector('#selectdir1').style.color = '#D70040'; ready = false;}
     if (!this.state.dir2Selected && this.state.operation == 1) {document.body.querySelector('#selectdir2').style.color = '#D70040'; ready = false;}
-    if (!this.state.dir3Selected) {document.body.querySelector('#selectdir3').style.color = '#D70040'; ready = false;}
+    if (!this.state.dir3Selected && this.state.operation !== 3 ) {document.body.querySelector('#selectdir3').style.color = '#D70040'; ready = false;}
     
     let x = document.getElementById('xInput').value;
     let y = document.getElementById('yInput').value;
     let br = document.getElementById('brInput').value;
     x = parseInt(x); 
     y = parseInt(y);
-    br = parseInt(br);
+    br = parseFloat(br);
 
     let queryX = document.body.querySelector('#xInput'); 
     if (isNaN(x)) {
@@ -144,6 +153,8 @@ export default class App extends React.Component {
         case 0: {humanReadableOperation = `Crop ${this.state.dir1} images to ${this.state.dir3} with dimensions {${x}, ${y}}`;break;}
         case 1: {humanReadableOperation = `Merge ${this.state.dir1} images with ${this.state.dir2} to ${this.state.dir3}`;break;}
         case 2: {humanReadableOperation = `Brightness ${this.state.dir1} images to ${this.state.dir3} by ${br}`;break;}
+        case 3: {humanReadableOperation = `Take dots from ${this.state.dir1} images to database`;break;}
+        case 4: {humanReadableOperation = `Fill ${this.state.dir1} images blank space by dots from database`;break;}
       }
       let HROperations = this.state.humanReadableOperations;
       HROperations.push(humanReadableOperation);
@@ -203,7 +214,12 @@ export default class App extends React.Component {
         break;
       }
       case 2: {
-        await StartProcessBrightness(this.state.dirs1[ind], this.state.dirs3[ind], this.state.br[ind]); 
+        await StartBrightnessProcess(this.state.dirs1[ind], this.state.dirs3[ind], this.state.br[ind]); 
+        break;
+      }
+      case 3: {
+        console.log("JS calling for dots:")
+        await StartDotsToDbProccess(this.state.dirs1[ind]); 
         break;
       }
     }
@@ -283,6 +299,7 @@ export default class App extends React.Component {
             <label htmlFor='crop' className='radios'>
               Crop
             </label>
+
             <input
               type='radio'
               id='merge'
@@ -293,6 +310,7 @@ export default class App extends React.Component {
             <label htmlFor='merge' className='radios'>
               Merge
             </label>
+
             <input
               type='radio'
               id='brightness'
@@ -300,9 +318,33 @@ export default class App extends React.Component {
               checked={this.state.checked[2]}
               onChange={this.ChangeMode}
             />
+
             <label htmlFor='brightness' className='radios'>
               Brightness+
             </label>
+
+            <input
+              type='radio'
+              id='dotsToDB'
+              name='rad'
+              checked={this.state.checked[3]}
+              onChange={this.ChangeMode}
+            />
+            <label htmlFor='dotsToDB' className='radios'>
+              Dots to DB
+            </label>
+
+            <input
+              type='radio'
+              id='dotsFromDB'
+              name='rad'
+              checked={this.state.checked[4]}
+              onChange={this.ChangeMode}
+            />
+            <label htmlFor='dotsFromDB' className='radios'>
+              Fill blank with dots
+            </label>
+
           </div>
           <p></p>
           <div
@@ -325,7 +367,7 @@ export default class App extends React.Component {
               +
             </div>
             <div
-              className={`${this.state.operation !== 1 ? '' : 'hide'}`}
+              className={`${(this.state.operation !== 1 && this.state.operation !== 3)? '' : 'hide'}`}
               style={{color: '#A9A9A9'}}
             >
               ↓
@@ -346,7 +388,7 @@ export default class App extends React.Component {
             >
               =
             </div>
-            <div className='selectDirField'>
+            <div className={`${this.state.operation === 3 ? 'hide' : 'selectDirField'}`}>
               <p id='selectdir3' className='selectdir3'>
                 {this.state.dir3}
               </p>
@@ -365,8 +407,8 @@ export default class App extends React.Component {
             <div className={`selectDirField sizes ${
                 this.state.operation === 2 ? '' : 'hide'
               }`}>
-            <div>Increaase brightness by</div>
-            <div><input id='brInput' maxLength='5' defaultValue={8}></input></div>
+            <div>Increase brightness by</div>
+            <div><input id='brInput' maxLength='5' defaultValue={8.00}></input></div>
             </div>
           </div>
           <div>

@@ -82,7 +82,11 @@ input[type=radio]:focus {
 
 .selectDirField {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
+    margin: auto;
+    text-align: center;
+    /*align-items: center;
+    text-align: center;*/
 }
 
 .selectDirField>* {
@@ -121,7 +125,9 @@ input[type=radio]:focus {
 #selectdir1,
 #selectdir2,
 #selectdir3 {
-    margin: auto;
+    margin: 0;
+    padding-top: 4px;
+    min-width: 180px;
 }
 
 .hide {

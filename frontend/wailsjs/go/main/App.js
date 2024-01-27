@@ -18,6 +18,10 @@ export function ProcessCut(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['ProcessCut'](arg1, arg2, arg3, arg4);
 }
 
+export function ProcessDotsToDB(arg1) {
+  return window['go']['main']['App']['ProcessDotsToDB'](arg1);
+}
+
 export function ProcessMerge(arg1, arg2, arg3) {
   return window['go']['main']['App']['ProcessMerge'](arg1, arg2, arg3);
 }
@@ -26,14 +30,18 @@ export function SetDirectoryDialog() {
   return window['go']['main']['App']['SetDirectoryDialog']();
 }
 
+export function StartBrightnessProcess(arg1, arg2, arg3) {
+  return window['go']['main']['App']['StartBrightnessProcess'](arg1, arg2, arg3);
+}
+
 export function StartCropProcess(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['StartCropProcess'](arg1, arg2, arg3, arg4);
 }
 
-export function StartMergeProcess(arg1, arg2, arg3) {
-  return window['go']['main']['App']['StartMergeProcess'](arg1, arg2, arg3);
+export function StartDotsToDbProccess(arg1) {
+  return window['go']['main']['App']['StartDotsToDbProccess'](arg1);
 }
 
-export function StartProcessBrightness(arg1, arg2, arg3) {
-  return window['go']['main']['App']['StartProcessBrightness'](arg1, arg2, arg3);
+export function StartMergeProcess(arg1, arg2, arg3) {
+  return window['go']['main']['App']['StartMergeProcess'](arg1, arg2, arg3);
 }
