@@ -10,6 +10,7 @@ import (
 	"image/png"
 	"io/ioutil"
 	"math"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -239,25 +240,22 @@ func increaseBrightnessImage(img image.Image, factor float64) image.Image {
 
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, a := img.At(x, y).RGBA()
+			r, _, _, a := img.At(x, y).RGBA()
 
+			// test BG
 			newR := clampFloat(float64(r)*factor, 0, 65535)
-			newG := clampFloat(float64(g)*factor, 0, 65535)
-			newB := clampFloat(float64(b)*factor, 0, 65535)
+			newG := clampFloat(float64(r)*factor, 0, 65535)
+			newB := clampFloat(float64(r)*factor, 0, 65535)
 
 			//fmt.Println(factor, newR, newG, newB)
 
-			/*
-
-				if newR > 20000 && newG > 20000 && newB > 20000 {
-					newColor := color.RGBA64{R: uint16(newR), G: uint16(newG), B: uint16(newB), A: uint16(a)}
-					newImg.Set(x, y, newColor)
-				} else {
-					newColor := color.RGBA64{R: uint16(0), G: uint16(0), B: uint16(0), A: uint16(a)}
-					newImg.Set(x, y, newColor)
-				}
-
-			*/
+			/*if newR > 20000 && newG > 20000 && newB > 20000 {
+				newColor := color.RGBA64{R: uint16(newR), G: uint16(newG), B: uint16(newB), A: uint16(a)}
+				newImg.Set(x, y, newColor)
+			} else {
+				newColor := color.RGBA64{R: uint16(0), G: uint16(0), B: uint16(0), A: uint16(a)}
+				newImg.Set(x, y, newColor)
+			}*/
 
 			newColor := color.RGBA64{R: uint16(newR), G: uint16(newG), B: uint16(newB), A: uint16(a)}
 			newImg.Set(x, y, newColor)
@@ -273,7 +271,8 @@ func increaseBrightnessFile(fInfo os.FileInfo, ff float64, dir_in string, dir_re
 		fmt.Println(err)
 		return
 	}
-	factor := ff //0.1 + float64(rand.Intn(20))/100
+	//factor := 0.0 + float64(rand.Intn(30))/100 // .7
+	factor := 0.0 + float64(rand.Intn(30))/100 // .8 - .9
 	imgBrigthness := increaseBrightnessImage(img, float64(factor))
 	ext := filepath.Ext(strings.ToLower(fInfo.Name()))
 	f, err := os.Create(dir_result + fInfo.Name()[:len(fInfo.Name())-len(ext)] + "_" + fmt.Sprintf("%f", factor) + filepath.Ext(fInfo.Name()))

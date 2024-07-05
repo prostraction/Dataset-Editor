@@ -71,26 +71,22 @@ export default class App extends React.Component {
 
   ChangeMode = () => {
     let flag = 0;
-    let checked = [0, 0, 0, 0, 0]
+    let checked = [0, 0, 0, 0]
     if (document.body.querySelector('#crop').checked) {
-      checked = [1, 0, 0, 0, 0]
+      checked = [1, 0, 0, 0]
       flag = 0;
     }
     if (document.body.querySelector('#merge').checked) {
-      checked = [0, 1, 0, 0, 0]
+      checked = [0, 1, 0, 0]
       flag = 1;
     }
     if (document.body.querySelector('#brightness').checked) {
-      checked = [0, 0, 1, 0, 0]
+      checked = [0, 0, 1, 0]
       flag = 2;
     }
     if (document.body.querySelector('#dotsToDB').checked) {
-      checked = [0, 0, 0, 1, 0]
+      checked = [0, 0, 0, 1]
       flag = 3;
-    }
-    if (document.body.querySelector('#dotsFromDB').checked) {
-      checked = [0, 0, 0, 0, 1]
-      flag = 4;
     }
     let dirText = this.state.dir1;
     if (!this.state.dir1Selected) {
@@ -153,8 +149,7 @@ export default class App extends React.Component {
         case 0: {humanReadableOperation = `Crop ${this.state.dir1} images to ${this.state.dir3} with dimensions {${x}, ${y}}`;break;}
         case 1: {humanReadableOperation = `Merge ${this.state.dir1} images with ${this.state.dir2} to ${this.state.dir3}`;break;}
         case 2: {humanReadableOperation = `Brightness ${this.state.dir1} images to ${this.state.dir3} by ${br}`;break;}
-        case 3: {humanReadableOperation = `Take dots from ${this.state.dir1} images to database`;break;}
-        case 4: {humanReadableOperation = `Fill ${this.state.dir1} images blank space by dots from database`;break;}
+        case 3: {humanReadableOperation = `Fill ${this.state.dir1} images blank space by dots from database`;break;}
       }
       let HROperations = this.state.humanReadableOperations;
       HROperations.push(humanReadableOperation);
@@ -332,17 +327,6 @@ export default class App extends React.Component {
             />
             <label htmlFor='dotsToDB' className='radios'>
               Dots to DB
-            </label>
-
-            <input
-              type='radio'
-              id='dotsFromDB'
-              name='rad'
-              checked={this.state.checked[4]}
-              onChange={this.ChangeMode}
-            />
-            <label htmlFor='dotsFromDB' className='radios'>
-              Fill blank with dots
             </label>
 
           </div>
